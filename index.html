@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Biblical Language Vocabulary Quiz</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;700&family=Noto+Serif+Hebrew&family=Noto+Serif&display=swap');
+
+        body {
+            font-family: 'Noto Sans', sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+
+        .container {
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            padding: 30px;
+        }
+
+        h1 {
+            text-align: center;
+            color: #2c3e50;
+            margin-bottom: 30px;
+        }
+
+        .categories {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .category {
+            background-color: #3498db;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            font-weight: bold;
+            display: flex;
+            justify-content: space-between;
+            min-width: 200px;
+        }
+
+        .category:hover {
+            background-color: #2980b9;
+        }
+
+        .category.active {
+            background-color: #16a085;
+        }
+
+        .flashcard-container {
+            min-height: 300px;
+            perspective: 1000px;
+            margin-bottom: 30px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .flashcard {
+            position: relative;
+            width: 500px;
+            height: 300px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            cursor: pointer;
+            background-color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            padding: 20px;
+            box-sizing: border-box;
+            text-align: center;
+        }
+
+        .word {
+            font-size: 36px;
+            margin-bottom: 20px;
+            font-weight: bold;
+        }
+
+        .hebrew {
+            font-family: 'Noto Serif Hebrew', serif;
+            direction: rtl;
+        }
+
+        .greek {
+            font-family: 'Noto Serif', serif;
+        }
+
+        .definition {
+            font-size: 20px;
+            color: #555;
+            display: none;
+        }
+
+        .controls {
+            display: flex;
+            justify-content: space-between;
+            gap: 10px;
+        }
+
+        button {
+            padding: 10px 20px;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+
+        button:hover {
+            background-color: #2980b9;
+        }
+
+        button:disabled {
+            background-color: #bdc3c7;
+            cursor: not-allowed;
+        }
+
+        .progress {
+            text-align: center;
+            font-size: 18px;
+            color: #7f8c8d;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Biblical Language Vocabulary Quiz</h1>
+        
+        <div class="categories" id="categories">
+            <!-- Categories will be generated here -->
+        </div>
+        
+        <div class="flashcard-container">
+            <div class="flashcard" id="flashcard">
+                <div class="word" id="word">Select a category to begin</div>
+                <div class="definition" id="definition"></div>
+            </div>
+        </div>
+        
+        <div class="controls">
+            <button id="prevBtn" disabled>Previous</button>
+            <button id="nextBtn" disabled>Next Word</button>
+        </div>
+        
+        <div class="progress" id="progress"></div>
+    </div>
+
+    <script>
+        // Sample data - you can replace this with your own data or load from external JSON
+        const vocabularyData = {
+            "hebrew-most-frequent": {
+                name: "Hebrew: Most Frequent (1000+)",
+                words: [
+                    { word: "אֱלֹהִים", definition: "God, gods", type: "hebrew" },
+                    { word: "יְהוָה", definition: "LORD, Yahweh", type: "hebrew" },
+                    { word: "אֶרֶץ", definition: "land, earth", type: "hebrew" },
+                    { word: "אָמַר", definition: "to say, speak, tell", type: "hebrew" },
+                    { word: "אִישׁ", definition: "man, husband", type: "hebrew" }
+                ]
+            },
+            "hebrew-common": {
+                name: "Hebrew: Common (500-999)",
+                words: [
+                    { word: "מָצָא", definition: "to find", type: "hebrew" },
+                    { word: "שָׁמַע", definition: "to hear, listen", type: "hebrew" },
+                    { word: "עָשָׂה", definition: "to do, make", type: "hebrew" },
+                    { word: "שָׁמַיִם", definition: "heavens, sky", type: "hebrew" },
+                    { word: "מַיִם", definition: "water", type: "hebrew" }
+                ]
+            },
+            "greek-most-frequent": {
+                name: "Greek: Most Frequent (1000+)",
+                words: [
+                    { word: "καί", definition: "and, even, also", type: "greek" },
+                    { word: "δέ", definition: "but, and, now", type: "greek" },
+                    { word: "αὐτός", definition: "he, she, it, they, same", type: "greek" },
+                    { word: "ἐν", definition: "in, on, among", type: "greek" },
+                    { word: "λέγω", definition: "I say, I tell", type: "greek" }
+                ]
+            },
+            "greek-common": {
+                name: "Greek: Common (500-999)",
+                words: [
+                    { word: "ἄγγελος", definition: "messenger, angel", type: "greek" },
+                    { word: "ἀγαπάω", definition: "to love", type: "greek" },
+                    { word: "ἀλήθεια", definition: "truth", type: "greek" },
+                    { word: "ἀμήν", definition: "truly, indeed", type: "greek" },
+                    { word: "βαπτίζω", definition: "to baptize", type: "greek" }
+                ]
+            }
+        };
+
+        // DOM elements
+        const categoriesDiv = document.getElementById('categories');
+        const flashcard = document.getElementById('flashcard');
+        const wordDiv = document.getElementById('word');
+        const definitionDiv = document.getElementById('definition');
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        const progressDiv = document.getElementById('progress');
+
+        // State variables
+        let currentCategory = null;
+        let currentIndex = 0;
+        let showingDefinition = false;
+        let history = [];
+
+        // Initialize categories
+        function initCategories() {
+            for (const categoryId in vocabularyData) {
+                const category = vocabularyData[categoryId];
+                const wordCount = category.words.length;
+                
+                const categoryElement = document.createElement('div');
+                categoryElement.className = 'category';
+                categoryElement.innerHTML = `${category.name} <span>(${wordCount})</span>`;
+                categoryElement.dataset.categoryId = categoryId;
+                
+                categoryElement.addEventListener('click', () => {
+                    selectCategory(categoryId);
+                });
+                
+                categoriesDiv.appendChild(categoryElement);
+            }
+        }
+
+        // Select a category
+        function selectCategory(categoryId) {
+            // Reset state
+            currentCategory = categoryId;
+            currentIndex = 0;
+            history = [0];
+            showingDefinition = false;
+            
+            // Update UI
+            document.querySelectorAll('.category').forEach(cat => {
+                cat.classList.remove('active');
+                if (cat.dataset.categoryId === categoryId) {
+                    cat.classList.add('active');
+                }
+            });
+            
+            updateFlashcard();
+            nextBtn.disabled = false;
+            prevBtn.disabled = history.length <= 1;
+        }
+
+        // Update flashcard content
+        function updateFlashcard() {
+            if (!currentCategory) return;
+            
+            const category = vocabularyData[currentCategory];
+            const wordObj = category.words[currentIndex];
+            
+            // Add the appropriate class for styling
+            if (wordObj.type === 'hebrew') {
+                wordDiv.className = 'word hebrew';
+            } else if (wordObj.type === 'greek') {
+                wordDiv.className = 'word greek';
+            } else {
+                wordDiv.className = 'word';
+            }
+            
+            wordDiv.textContent = wordObj.word;
+            definitionDiv.textContent = wordObj.definition;
+            definitionDiv.style.display = showingDefinition ? 'block' : 'none';
+            
+            updateProgress();
+        }
+
+        // Update progress indicator
+        function updateProgress() {
+            if (!currentCategory) return;
+            
+            const category = vocabularyData[currentCategory];
+            progressDiv.textContent = `Word ${currentIndex + 1} of ${category.words.length}`;
+        }
+
+        // Event Listeners
+        flashcard.addEventListener('click', () => {
+            if (!currentCategory) return;
+            
+            // If definition is not showing, show it
+            if (!showingDefinition) {
+                showingDefinition = true;
+                definitionDiv.style.display = 'block';
+            } else {
+                // If definition is showing, go to next word
+                showingDefinition = false;
+                currentIndex = (currentIndex + 1) % vocabularyData[currentCategory].words.length;
+                history.push(currentIndex);
+                updateFlashcard();
+                prevBtn.disabled = false;
+            }
+        });
+
+        nextBtn.addEventListener('click', () => {
+            if (!currentCategory) return;
+            
+            showingDefinition = false;
+            currentIndex = (currentIndex + 1) % vocabularyData[currentCategory].words.length;
+            history.push(currentIndex);
+            updateFlashcard();
+            prevBtn.disabled = false;
+        });
+
+        prevBtn.addEventListener('click', () => {
+            if (history.length > 1) {
+                history.pop(); // Remove current
+                currentIndex = history[history.length - 1];
+                showingDefinition = false;
+                updateFlashcard();
+                
+                if (history.length <= 1) {
+                    prevBtn.disabled = true;
+                }
+            }
+        });
+
+        // Initialize the app
+        initCategories();
+    </script>
+</body>
+</html>
